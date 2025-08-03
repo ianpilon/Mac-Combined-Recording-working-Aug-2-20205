@@ -6,6 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C6B776922DC12ACB005468BC /* CombinedAudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B776912DC12ACB005468BC /* CombinedAudioEngine.swift */; };
+		C6CBAE642D9AF19C0053C5AB /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CBAE632D9AF19C0053C5AB /* AudioRecorder.swift */; };
+		C6CBAE692D9AFE560053C5AB /* MacAudioRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CBAE682D9AFE560053C5AB /* MacAudioRecorderApp.swift */; };
+		C6CBAE6A2D9AFE560053C5AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CBAE672D9AFE560053C5AB /* AppDelegate.swift */; };
+		C6CBAE6E2D9B00870053C5AB /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C6CBAE6D2D9B00870053C5AB /* Info.plist */; };
+		C6CBAE6F2D9B00870053C5AB /* AudioRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CBAE6B2D9B00870053C5AB /* AudioRecorderApp.swift */; };
+		C6CBAE702D9B00870053C5AB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CBAE6C2D9B00870053C5AB /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		C6CBAE472D9AF08C0053C5AB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,9 +34,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C6B776912DC12ACB005468BC /* CombinedAudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombinedAudioEngine.swift; sourceTree = "<group>"; };
 		C6CBAE352D9AF08A0053C5AB /* MacAudioRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacAudioRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6CBAE462D9AF08C0053C5AB /* MacAudioRecorderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacAudioRecorderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6CBAE502D9AF08C0053C5AB /* MacAudioRecorderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacAudioRecorderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6CBAE632D9AF19C0053C5AB /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
+		C6CBAE672D9AFE560053C5AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C6CBAE682D9AFE560053C5AB /* MacAudioRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAudioRecorderApp.swift; sourceTree = "<group>"; };
+		C6CBAE6B2D9B00870053C5AB /* AudioRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderApp.swift; sourceTree = "<group>"; };
+		C6CBAE6C2D9B00870053C5AB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C6CBAE6D2D9B00870053C5AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +92,13 @@
 		C6CBAE2C2D9AF08A0053C5AB = {
 			isa = PBXGroup;
 			children = (
+				C6B776912DC12ACB005468BC /* CombinedAudioEngine.swift */,
+				C6CBAE6B2D9B00870053C5AB /* AudioRecorderApp.swift */,
+				C6CBAE6C2D9B00870053C5AB /* ContentView.swift */,
+				C6CBAE6D2D9B00870053C5AB /* Info.plist */,
+				C6CBAE672D9AFE560053C5AB /* AppDelegate.swift */,
+				C6CBAE682D9AFE560053C5AB /* MacAudioRecorderApp.swift */,
+				C6CBAE632D9AF19C0053C5AB /* AudioRecorder.swift */,
 				C6CBAE372D9AF08A0053C5AB /* MacAudioRecorder */,
 				C6CBAE492D9AF08C0053C5AB /* MacAudioRecorderTests */,
 				C6CBAE532D9AF08C0053C5AB /* MacAudioRecorderUITests */,
@@ -212,6 +236,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6CBAE6E2D9B00870053C5AB /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +261,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6CBAE642D9AF19C0053C5AB /* AudioRecorder.swift in Sources */,
+				C6B776922DC12ACB005468BC /* CombinedAudioEngine.swift in Sources */,
+				C6CBAE692D9AFE560053C5AB /* MacAudioRecorderApp.swift in Sources */,
+				C6CBAE6A2D9AFE560053C5AB /* AppDelegate.swift in Sources */,
+				C6CBAE6F2D9B00870053C5AB /* AudioRecorderApp.swift in Sources */,
+				C6CBAE702D9B00870053C5AB /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,11 +432,14 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.ianpilon.MacAudioRecorder;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -428,11 +462,14 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.ianpilon.MacAudioRecorder;
 				PRODUCT_NAME = "$(TARGET_NAME)";
