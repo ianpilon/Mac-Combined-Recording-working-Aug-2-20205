@@ -133,6 +133,9 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
             return
         }
         
+        // Clear any previous audio data FIRST
+        clearScheduledBuffers()
+        
         // Setup audio engine with proper connections
         setupAudioEngine()
         
@@ -270,17 +273,39 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
         return tempDir.appendingPathComponent("combined_recording_\(timestamp)_\(uniqueID)").appendingPathExtension("caf")
     }
     
-    // Resets audio nodes to clean state
-    private func resetAudioNodes() {
-        print("Resetting audio nodes")
-        // Stop and reset the player node
-        systemAudioPlayerNode.stop()
+    // Clears all scheduled audio buffers from the system audio player node
+    private func clearScheduledBuffers() {
+        print("Clearing scheduled audio buffers...")
+        
+        // Stop the player node
+        if systemAudioPlayerNode.isPlaying {
+            systemAudioPlayerNode.stop()
+        }
+        
+        // Reset clears all scheduled buffers
         systemAudioPlayerNode.reset()
         
-        // Remove any existing connections if the engine is running
+        print("All scheduled buffers cleared")
+    }
+    
+    // Resets audio nodes to clean state
+    private func resetAudioNodes() {
+        print("Resetting audio nodes...")
+        
         if engine.isRunning {
+            // Stop the player node completely
+            if systemAudioPlayerNode.isPlaying {
+                systemAudioPlayerNode.stop()
+                print("Stopped system audio player node")
+            }
+            
+            // Disconnect from audio graph
             engine.disconnectNodeOutput(systemAudioPlayerNode)
-            // Do not disconnect the input node as it might be in use elsewhere
+            print("Disconnected system audio player node")
+            
+            // Reset the node to clear any scheduled buffers
+            systemAudioPlayerNode.reset()
+            print("Reset system audio player node (cleared buffers)")
         }
     }
     
