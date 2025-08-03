@@ -117,12 +117,6 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
         // Reset state from previous recording
         completedRecordingURL = nil
         
-        // Clean up existing resources
-        if engine.isRunning {
-            engine.stop()
-        }
-        resetAudioNodes()
-        
         // Check permissions (could be moved to a separate method)
         let micPermission = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
         let screenPermission = CGPreflightScreenCaptureAccess()
@@ -139,26 +133,16 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
             return
         }
         
+        // Setup audio engine with proper connections
+        setupAudioEngine()
+        
+        // Reset audio nodes to ensure clean state
+        resetAudioNodes()
+        
         // Start screen capture stream
         Task(priority: .userInitiated) {
             await startScreenCapture()
         }
-        
-        // --- Make engine connections --- 
-        let inputNode = engine.inputNode // Default Mic Input
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        
-        // Connect Mic to Mixer
-        engine.connect(inputNode, to: mixer, format: inputFormat)
-        print("Connected Mic Input node to Mixer node.")
-        
-        // Define the format for the system audio source node
-        // We aim to match the engine's main mixer output format
-        let systemAudioFormat = mixer.outputFormat(forBus: 0)
-        
-        // Connect System Audio Player Node to Mixer
-        engine.connect(systemAudioPlayerNode, to: mixer, format: systemAudioFormat)
-        print("Connected System Audio Player node to Mixer node.")
         
         do {
             try engine.start()
@@ -263,9 +247,11 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
             print("Recording stopped but file not found or not created")
         }
         
-        // Reset engine to clear any lingering state
-        engine.reset()
-        print("AVAudioEngine reset.")
+        // Stop engine but DON'T reset it - keep the audio graph intact
+        if engine.isRunning {
+            engine.stop()
+            print("Engine stopped (graph preserved)")
+        }
         
         // Clear outputFileURL to prevent confusion with next recording
         outputFileURL = nil
@@ -311,16 +297,39 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
     }
     
     private func setupAudioEngine() {
-        // Attach nodes that will be used
-        _ = engine.inputNode // Ensure input node is available early
+        print("Setting up audio engine...")
+        
+        // Clean shutdown if running
+        if engine.isRunning {
+            engine.stop()
+            print("Stopped running engine")
+        }
+        
+        // Detach all custom nodes to ensure clean state
+        if engine.attachedNodes.contains(systemAudioPlayerNode) {
+            engine.detach(systemAudioPlayerNode)
+            print("Detached system audio player node")
+        }
+        
+        // Reattach system audio player node
         engine.attach(systemAudioPlayerNode)
+        print("Reattached system audio player node")
         
-        // Initial connections (more connections might happen in startRecording)
-        // We will connect mic and system audio source to the mixer later.
+        // Rebuild microphone input connection
+        let inputNode = engine.inputNode
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        engine.connect(inputNode, to: mixer, format: inputFormat)
+        print("Connected microphone input to mixer")
         
-        // Prepare the engine but don't start it here
+        // Connect system audio player to mixer
+        // Use standard format that's compatible with most system audio
+        let systemAudioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+        engine.connect(systemAudioPlayerNode, to: mixer, format: systemAudioFormat)
+        print("Connected system audio player to mixer")
+        
+        // Prepare engine for recording
         engine.prepare()
-        print("AVAudioEngine prepared.")
+        print("Audio engine prepared and ready")
     }
     
     // MARK: - Screen Capture Setup & Control
