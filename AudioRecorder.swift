@@ -357,10 +357,8 @@ class AudioRecorder: NSObject {
             print("🔴 PERMISSIONS OK, STARTING RECORDING")
             
             if !combinedEngine.isRecording {
-                // Set up recording URL
-                recordingURL = combinedRecordingURL
-                NSLog("🔴 RECORDING URL SET TO: \(recordingURL?.path ?? "unknown")")
-                print("🔴 RECORDING URL SET TO: \(recordingURL?.path ?? "unknown")")
+                // DON'T set recordingURL here - let engine manage it
+                // recordingURL = combinedRecordingURL  // ← REMOVED
                 
                 // Start the engine recording
                 NSLog("🔴 CALLING ENGINE.STARTRECORDING()")
@@ -818,19 +816,17 @@ class AudioRecorder: NSObject {
                     // Stop the recording
                     engine.stopRecording()
                     
-                    // Update recording URL with the completed URL from the engine
-                    NSLog("🔴 CHECKING COMPLETED URL FROM ENGINE")
-                    print("🔴 CHECKING COMPLETED URL FROM ENGINE")
+                    // Sync the URL immediately after stopping
+                    NSLog("🔴 SYNCING COMPLETED URL FROM ENGINE")
+                    print("🔴 SYNCING COMPLETED URL FROM ENGINE")
                     
                     if let completedURL = engine.completedRecordingURL {
-                        NSLog("🔴 COMBINED RECORDING COMPLETED AT: \(completedURL.path)")
-                        print("🔴 COMBINED RECORDING COMPLETED AT: \(completedURL.path)")
                         recordingURL = completedURL
-                        NSLog("🔴 UPDATED recordingURL TO: \(recordingURL?.path ?? "nil")")
-                        print("🔴 UPDATED recordingURL TO: \(recordingURL?.path ?? "nil")")
+                        NSLog("🔴 ✅ SYNCED recordingURL TO: \(completedURL.path)")
+                        print("🔴 ✅ SYNCED recordingURL TO: \(completedURL.path)")
                     } else {
-                        NSLog("🔴 WARNING: NO COMPLETED URL FROM ENGINE")
-                        print("🔴 WARNING: NO COMPLETED URL FROM ENGINE")
+                        NSLog("🔴 ❌ WARNING: NO COMPLETED URL FROM ENGINE")
+                        print("🔴 ❌ WARNING: NO COMPLETED URL FROM ENGINE")
                     }
                     
                     isRecording = false
@@ -1102,10 +1098,14 @@ class AudioRecorder: NSObject {
             if #available(macOS 12.3, *), let engine = combinedAudioEngine {
                 NSLog("🟢 USING COMBINED ENGINE FOR PLAYBACK")
                 print("🟢 USING COMBINED ENGINE FOR PLAYBACK")
-                NSLog("🟢 ENGINE COMPLETED URL: \(engine.completedRecordingURL?.path ?? "nil")")
-                print("🟢 ENGINE COMPLETED URL: \(engine.completedRecordingURL?.path ?? "nil")")
-                NSLog("🟢 AUDIORECORDER recordingURL: \(recordingURL?.path ?? "nil")")
-                print("🟢 AUDIORECORDER recordingURL: \(recordingURL?.path ?? "nil")")
+                
+                // Ensure URL is synced before playback
+                if let engineURL = engine.completedRecordingURL {
+                    recordingURL = engineURL
+                    NSLog("🟢 ✅ SYNCED URL FOR PLAYBACK: \(engineURL.path)")
+                    print("🟢 ✅ SYNCED URL FOR PLAYBACK: \(engineURL.path)")
+                }
+                
                 let success = engine.playLastRecording()
                 if success {
                     isPlaying = true
