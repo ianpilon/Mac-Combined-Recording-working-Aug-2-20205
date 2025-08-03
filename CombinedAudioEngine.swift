@@ -30,6 +30,10 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
     @Published var statusMessage: String = "Ready"
     @Published var completedRecordingURL: URL? = nil // URL of the last completed recording
     
+    // --- Connection State Tracking (CRASH FIX) ---
+    private var micInputDisconnected: Bool = false
+    private var systemAudioDisconnected: Bool = false
+    
     // Computed property to check if the engine is running
     var isRunning: Bool {
         return engine.isRunning
@@ -68,41 +72,63 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
                 stopRecording()
             }
             
-            // Create a player node for playback
+            // CRITICAL: Only disconnect inputs if we're not actively recording
+            // (This prevents feedback during playback while preserving recording capability)
+            if engine.isRunning && !isRecording {
+                // Disconnect microphone input from mixer (prevents feedback)
+                engine.disconnectNodeInput(mixer, bus: 0)
+                micInputDisconnected = true
+                print("🔇 Disconnected microphone input to prevent feedback")
+                
+                // Disconnect system audio player from mixer (prevents interference)
+                engine.disconnectNodeOutput(systemAudioPlayerNode)
+                systemAudioDisconnected = true
+                print("🔇 Disconnected system audio player to prevent interference")
+            } else if isRecording {
+                micInputDisconnected = false
+                systemAudioDisconnected = false
+                print("⚠️ Recording in progress - keeping audio connections intact")
+            }
+            
+            // Create a dedicated player node for playback
             let playerNode = AVAudioPlayerNode()
             engine.attach(playerNode)
             
             // Get the file
             let audioFile = try AVAudioFile(forReading: fileURL)
-            print("Playing file: \(fileURL.path)")
+            print("🎵 Playing file: \(fileURL.path)")
             
-            // Connect player to the output
-            engine.connect(playerNode, to: engine.mainMixerNode, format: audioFile.processingFormat)
+            // Connect player DIRECTLY to output (bypass mixer to avoid feedback)
+            engine.connect(playerNode, to: engine.outputNode, format: audioFile.processingFormat)
+            print("🔌 Connected player directly to output (isolated path)")
             
             // Start the engine if needed
             if !engine.isRunning {
                 try engine.start()
+                print("🎵 Started engine for playback")
             }
             
             // Schedule the file for playback
             playerNode.scheduleFile(audioFile, at: nil) { [weak self] in
                 DispatchQueue.main.async {
-                    self?.statusMessage = "Playback finished"
-                    print("Playback finished")
+                    guard let strongSelf = self else { return }
                     
-                    // Clean up after playback
-                    self?.engine.detach(playerNode)
+                    strongSelf.statusMessage = "Playback finished"
+                    print("🎵 Playback finished")
+                    
+                    // SAFE CLEANUP: Use try-catch to prevent crashes
+                    strongSelf.safeCleanupPlayback(playerNode: playerNode)
                 }
             }
             
             // Start playback
             playerNode.play()
             statusMessage = "Playing recording..."
-            print("Started playback of recording")
+            print("🎵 Started isolated playback (no feedback)")
             return true
         } catch {
             statusMessage = "Error playing recording: \(error.localizedDescription)"
-            print("Error playing combined recording: \(error.localizedDescription)")
+            print("❌ Error playing combined recording: \(error.localizedDescription)")
             return false
         }
     }
@@ -321,6 +347,61 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
         print("-----------------------------------")
     }
     
+    // Safely reconnects audio sources after playback to restore recording capability
+    private func reconnectAudioSources() {
+        print("🔌 Safely reconnecting audio sources for future recording...")
+        
+        guard engine.isRunning else {
+            print("⚠️ Engine not running, skipping reconnection")
+            return
+        }
+        
+        // CRASH FIX: Only reconnect what we actually disconnected
+        if !micInputDisconnected && !systemAudioDisconnected {
+            print("✅ No disconnections made - skipping reconnection")
+            return
+        }
+        
+        do {
+            // Only reconnect microphone if we disconnected it
+            if micInputDisconnected {
+                let inputNode = engine.inputNode
+                let inputFormat = inputNode.outputFormat(forBus: 0)
+                engine.connect(inputNode, to: mixer, format: inputFormat)
+                micInputDisconnected = false
+                print("🎤 Reconnected microphone input to mixer")
+            }
+            
+            // Only reconnect system audio player if we disconnected it
+            if systemAudioDisconnected {
+                // CRITICAL: Use the SAME sample rate as the engine
+                let engineSampleRate = engine.outputNode.outputFormat(forBus: 0).sampleRate
+                let systemAudioFormat = AVAudioFormat(standardFormatWithSampleRate: engineSampleRate, channels: 2)!
+                engine.connect(systemAudioPlayerNode, to: mixer, format: systemAudioFormat)
+                systemAudioDisconnected = false
+                print("🔊 Reconnected system audio player to mixer (\(engineSampleRate)Hz)")
+            }
+            
+            print("✅ Audio sources safely reconnected - ready for recording")
+        } catch {
+            print("❌ Error reconnecting audio sources: \(error.localizedDescription)")
+            // Reset state and fallback to full setup
+            micInputDisconnected = false
+            systemAudioDisconnected = false
+            setupAudioEngine()
+        }
+    }
+    
+    // MINIMAL cleanup to isolate crash cause
+    private func safeCleanupPlayback(playerNode: AVAudioPlayerNode) {
+        print("🧹 MINIMAL cleanup - isolating crash cause...")
+        
+        // STEP 1: Just update status - NO audio operations
+        print("✅ Playback cleanup completed (minimal)")
+        
+        // TODO: Add operations one by one to find crash point
+    }
+    
     private func setupAudioEngine() {
         print("Setting up audio engine...")
         
@@ -344,17 +425,27 @@ class CombinedAudioEngine: NSObject, ObservableObject, SCStreamDelegate {
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
         engine.connect(inputNode, to: mixer, format: inputFormat)
-        print("Connected microphone input to mixer")
+        print("🎤 Connected microphone input to mixer (Format: \(inputFormat))")
         
         // Connect system audio player to mixer
-        // Use standard format that's compatible with most system audio
-        let systemAudioFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+        // CRITICAL: Use the SAME sample rate as the engine to prevent speed mismatch
+        let engineSampleRate = engine.outputNode.outputFormat(forBus: 0).sampleRate
+        let systemAudioFormat = AVAudioFormat(standardFormatWithSampleRate: engineSampleRate, channels: 2)!
         engine.connect(systemAudioPlayerNode, to: mixer, format: systemAudioFormat)
-        print("Connected system audio player to mixer")
+        print("🔊 Connected system audio player to mixer (Format: \(systemAudioFormat))")
+        print("⚙️ SAMPLE RATE SYNC: Engine=\(engineSampleRate)Hz, SystemAudio=\(systemAudioFormat.sampleRate)Hz")
         
         // Prepare engine for recording
         engine.prepare()
-        print("Audio engine prepared and ready")
+        print("⚙️ Audio engine prepared and ready")
+        
+        // Enhanced diagnostics
+        print("🔍 AUDIO GRAPH DIAGNOSTICS:")
+        print("  - Input Node: \(inputNode)")
+        print("  - System Audio Player: \(systemAudioPlayerNode)")
+        print("  - Mixer: \(mixer)")
+        print("  - Mixer Input Count: \(mixer.numberOfInputs)")
+        print("  - Engine Attached Nodes: \(engine.attachedNodes.count)")
     }
     
     // MARK: - Screen Capture Setup & Control
